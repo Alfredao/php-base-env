@@ -1,0 +1,31 @@
+version: "3.1"
+services:
+  mysql:
+    image: mysql:8.0
+    platform: linux/x86_64
+    container_name: debora-mysql
+    env_file:
+      - ./.env
+    ports:
+      - "33060:3306"
+  redis:
+    image: redis:alpine
+    container_name: debora-redis
+    healthcheck:
+      test: [ 'CMD', 'redis-cli', 'ping' ]
+    restart: unless-stopped
+    ports:
+      - "63790:6379"
+  php-apache:
+    build:
+      context: phpdocker/development/php-apache
+    container_name: debora-php-apache
+    working_dir: /var/www/html
+    volumes:
+      - ./src:/var/www/html/
+      - ./phpdocker/development/php-apache/php-ini-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+    ports:
+      - "8080:80"
+    links:
+      - mysql
+      - redis
